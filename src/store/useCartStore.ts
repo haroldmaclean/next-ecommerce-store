@@ -1,0 +1,65 @@
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+
+// Your interfaces...
+
+export const useCartStore = create<CartState>()(
+  persist(
+    (set) => ({
+      cart: [],
+
+      addToCart: (item) =>
+        set((state) => {
+          const existing = state.cart.find((i) => i.id === item.id);
+          if (existing) {
+            const updatedCart = state.cart.map((i) =>
+              i.id === item.id
+                ? { ...i, quantity: i.quantity + item.quantity }
+                : i
+            );
+            console.log("Updated existing item in cart:", updatedCart);
+            return { cart: updatedCart };
+          }
+          const newCart = [...state.cart, item];
+          console.log("Added new item to cart:", newCart);
+          return { cart: newCart };
+        }),
+
+      removeFromCart: (id) =>
+        set((state) => {
+          const filteredCart = state.cart.filter((item) => item.id !== id);
+          console.log(`Removed item with id=${id} from cart:`, filteredCart);
+          return { cart: filteredCart };
+        }),
+
+      clearCart: () => {
+        console.log("Cleared cart");
+        return set({ cart: [] });
+      },
+
+      // ✅ New handlers for quantity buttons
+      increaseQuantity: (id) =>
+        set((state) => ({
+          cart: state.cart.map((item) =>
+            item.id === id
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
+          ),
+        })),
+
+      decreaseQuantity: (id) =>
+        set((state) => ({
+          cart: state.cart
+            .map((item) =>
+              item.id === id
+                ? { ...item, quantity: item.quantity - 1 }
+                : item
+            )
+            .filter((item) => item.quantity > 0),
+        })),
+    }),
+    {
+      name: "cart-storage", // localStorage key
+    }
+  )
+);
