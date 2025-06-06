@@ -2,19 +2,28 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { fetchProducts } from "@/lib/api";
+
+import { fetchProducts, Product } from "@/utils/fetchProducts";
+
+// Define the Product type or import it from your types file
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  // add more fields if needed
+}
 
 export default function Home() {
-  const [products, setProducts] = useState([]);
-  const [error, setError] = useState(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const data = await fetchProducts();
-        console.log("Fetched products data:", data);
-
-        setProducts(data.products || []); // Fallback if data.products is undefined
+        const { products = [] } = await fetchProducts();
+        console.log("Fetched products:", products);
+        setProducts(products);
         setError(null);
       } catch (err) {
         console.error("Error loading products:", err);
@@ -44,12 +53,16 @@ export default function Home() {
           {products.length > 0 ? (
             products.map((product) => (
               <div
-                key={product._id || product.id} // Ensure key works regardless of source
+                key={product._id || product.id}
                 className="bg-white rounded shadow hover:shadow-lg transition p-4 text-center"
               >
                 <div className="relative w-full h-48 mb-4">
                   <Image
-                    src={product.image?.startsWith("/") ? product.image : "/images/apple-iphone-15.jpg"}
+                    src={
+                      product.image?.startsWith("/")
+                        ? product.image
+                        : "/images/apple-iphone-15.jpg" // ✅ fallback image
+                    }
                     alt={product.name || "Product Image"}
                     fill
                     style={{ objectFit: "cover", borderRadius: "0.5rem" }}
@@ -71,7 +84,9 @@ export default function Home() {
               </div>
             ))
           ) : (
-            <p className="text-center text-gray-500 col-span-3">Loading products...</p>
+            <p className="text-center text-gray-500 col-span-3">
+              Loading products...
+            </p>
           )}
         </div>
       </section>

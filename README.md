@@ -25,7 +25,7 @@
 
 ## 📸 Screenshot
 
-![Project Screenshot](./frontend/public/images/screenshot-home.png)
+![Project Screenshot](./frontend/public/screenshot/Homepage.png)
 
 ---
 
