@@ -1,8 +1,26 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-// Your interfaces...
+// ✅ Define and export the CartItem type
+export interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image: string;
+}
 
+// ✅ Define the store's state shape
+interface CartState {
+  cart: CartItem[];
+  addToCart: (item: CartItem) => void;
+  removeFromCart: (id: string) => void;
+  clearCart: () => void;
+  increaseQuantity: (id: string) => void;
+  decreaseQuantity: (id: string) => void;
+}
+
+// ✅ Create Zustand store
 export const useCartStore = create<CartState>()(
   persist(
     (set) => ({
@@ -37,7 +55,6 @@ export const useCartStore = create<CartState>()(
         return set({ cart: [] });
       },
 
-      // ✅ New handlers for quantity buttons
       increaseQuantity: (id) =>
         set((state) => ({
           cart: state.cart.map((item) =>
@@ -59,7 +76,7 @@ export const useCartStore = create<CartState>()(
         })),
     }),
     {
-      name: "cart-storage", // localStorage key
+      name: "cart-storage",
     }
   )
 );

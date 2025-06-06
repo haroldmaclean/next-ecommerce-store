@@ -14,20 +14,18 @@ export default function ProductCard({ product }: ProductCardProps) {
   const handleAddToCart = () => {
     const cartItem: CartItem = {
       ...product,
-      quantity: 1, // 🔑 Always add quantity
+      quantity: 1,
     };
 
-    // ✅ Bonus debugging tip:
     console.log("Adding to cart:", cartItem);
-
     addToCart(cartItem);
   };
 
+  // ✅ Debugging log moved out of JSX
+  console.log("Rendering product:", product);
+
   return (
     <div className="border rounded p-4 shadow-md">
-      {/* Optional: Debugging render confirmation */}
-      {console.log("Rendering product:", product)}
-
       <Image
         src={product.image}
         alt={product.name}

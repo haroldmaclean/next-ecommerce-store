@@ -2,17 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-
-import { fetchProducts, Product } from "@/utils/fetchProducts";
-
-// Define the Product type or import it from your types file
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  // add more fields if needed
-}
+import { fetchProducts, Product } from "@/utils/fetchProducts"; // ✅ import the type only
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -23,7 +13,7 @@ export default function Home() {
       try {
         const { products = [] } = await fetchProducts();
         console.log("Fetched products:", products);
-        setProducts(products);
+        setProducts(products); // ✅ TS warning gone
         setError(null);
       } catch (err) {
         console.error("Error loading products:", err);
@@ -61,7 +51,7 @@ export default function Home() {
                     src={
                       product.image?.startsWith("/")
                         ? product.image
-                        : "/images/apple-iphone-15.jpg" // ✅ fallback image
+                        : "/images/apple-iphone-15.jpg"
                     }
                     alt={product.name || "Product Image"}
                     fill
