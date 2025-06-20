@@ -1,121 +1,5 @@
-// 'use client'
-
-// import { useEffect } from 'react'
-// import { useCartStore } from '@/store/useCartStore'
-// import { useRouter } from 'next/navigation'
-// import { loadStripe } from '@stripe/stripe-js'
-
-// const stripePromise = loadStripe(
-//   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
-// )
-
-// export default function CheckoutPage() {
-//   const router = useRouter()
-//   const cart = useCartStore((state) => state.cart)
-
-//   const subtotal = cart.reduce(
-//     (sum, item) => sum + item.price * item.quantity,
-//     0
-//   )
-//   const shipping = cart.length > 0 ? 10 : 0
-//   const total = subtotal + shipping
-
-//   useEffect(() => {
-//     const token = localStorage.getItem('token')
-//     if (!token) {
-//       router.push('/login')
-//     }
-//   }, [])
-
-//   const handleCheckout = async () => {
-//     const stripe = await stripePromise
-
-//     const response = await fetch('/api/checkout', {
-//       method: 'POST',
-//       headers: { 'Content-Type': 'application/json' },
-//       body: JSON.stringify({ items: cart }),
-//     })
-
-//     // const data = await response.json()
-//     // if (data.url) {
-//     //   stripe?.redirectToCheckout({ url: data.url })
-//     // } else {
-//     //   alert('Checkout failed.')
-//     // }
-//     const data = await response.json()
-//     if (data.sessionId) {
-//       stripe?.redirectToCheckout({ sessionId: data.sessionId })
-//     } else {
-//       alert('Checkout failed.')
-//     }
-//   }
-
-//   return (
-//     <div className='p-8'>
-//       <h1 className='text-2xl font-bold mb-4'>Checkout</h1>
-//       <h2 className='text-lg font-semibold mb-2'>Order Summary</h2>
-
-//       <div className='mb-4'>
-//         <p>
-//           Subtotal: <strong>${subtotal.toFixed(2)}</strong>
-//         </p>
-//         <p>
-//           Shipping: <strong>${shipping.toFixed(2)}</strong>
-//         </p>
-//         <p>
-//           Total: <strong>${total.toFixed(2)}</strong>
-//         </p>
-//       </div>
-
-//       <form
-//         className='space-y-4 bg-white p-4 rounded shadow'
-//         onSubmit={(e) => {
-//           e.preventDefault()
-//           handleCheckout()
-//         }}
-//       >
-//         <div>
-//           <label className='block mb-1'>Full Name</label>
-//           <input
-//             type='text'
-//             required
-//             className='w-full p-2 border rounded'
-//             placeholder='John Doe'
-//           />
-//         </div>
-
-//         <div>
-//           <label className='block mb-1'>Email</label>
-//           <input
-//             type='email'
-//             required
-//             className='w-full p-2 border rounded'
-//             placeholder='john@example.com'
-//           />
-//         </div>
-
-//         <div>
-//           <label className='block mb-1'>Shipping Address</label>
-//           <textarea
-//             required
-//             className='w-full p-2 border rounded'
-//             placeholder='123 Street Name, City'
-//           />
-//         </div>
-
-//         <button
-//           type='submit'
-//           className='bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700'
-//         >
-//           Place Order
-//         </button>
-//       </form>
-//     </div>
-//   )
-// }
-
 'use client'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCartStore } from '@/store/useCartStore'
 
@@ -126,6 +10,7 @@ export default function CheckoutPage() {
   const [email, setEmail] = useState('')
   const [address, setAddress] = useState('')
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false)
 
   const subtotal = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -143,10 +28,27 @@ export default function CheckoutPage() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // const handleSubmit = (e: React.FormEvent) => {
+  //   e.preventDefault()
+  //   if (!validate()) return
+  //   router.push('/thank-you')
+  // }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!validate()) return
-    router.push('/thank-you')
+
+    if (!validate()) return // 👈 Ensure form is valid first
+
+    setIsPlacingOrder(true)
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+      router.push('/thank-you') // ✅ Add redirect on success
+    } catch (err) {
+      alert('Order failed.')
+    } finally {
+      setIsPlacingOrder(false)
+    }
   }
 
   return (
@@ -206,11 +108,18 @@ export default function CheckoutPage() {
           )}
         </div>
 
-        <button
+        {/* <button
           type='submit'
           className='bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700'
         >
           Place Order
+        </button> */}
+        <button
+          type='submit'
+          className='bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50'
+          disabled={isPlacingOrder}
+        >
+          {isPlacingOrder ? 'Placing Order...' : 'Place Order'}
         </button>
       </form>
     </div>
