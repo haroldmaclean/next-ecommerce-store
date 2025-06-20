@@ -9,6 +9,7 @@ export default function CheckoutPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [address, setAddress] = useState('')
+  const [country, setCountry] = useState('South Africa')
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
   const [isPlacingOrder, setIsPlacingOrder] = useState(false)
 
@@ -28,22 +29,16 @@ export default function CheckoutPage() {
     return Object.keys(newErrors).length === 0
   }
 
-  // const handleSubmit = (e: React.FormEvent) => {
-  //   e.preventDefault()
-  //   if (!validate()) return
-  //   router.push('/thank-you')
-  // }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!validate()) return // 👈 Ensure form is valid first
+    if (!validate()) return
 
     setIsPlacingOrder(true)
 
     try {
       await new Promise((resolve) => setTimeout(resolve, 2000))
-      router.push('/thank-you') // ✅ Add redirect on success
+      router.push('/thank-you')
     } catch (err) {
       alert('Order failed.')
     } finally {
@@ -54,6 +49,32 @@ export default function CheckoutPage() {
   return (
     <div className='p-8 max-w-2xl mx-auto'>
       <h1 className='text-2xl font-bold mb-4'>Checkout</h1>
+
+      {/* ✅ Progress Indicator */}
+      <div className='mb-6'>
+        <div className='flex items-center space-x-4'>
+          <div className='flex items-center text-gray-400'>
+            <span className='w-6 h-6 rounded-full border border-gray-400 flex items-center justify-center text-sm'>
+              1
+            </span>
+            <span className='ml-2'>Cart</span>
+          </div>
+          <span className='text-gray-400'>→</span>
+          <div className='flex items-center text-blue-600 font-semibold'>
+            <span className='w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm'>
+              2
+            </span>
+            <span className='ml-2'>Checkout</span>
+          </div>
+          <span className='text-gray-400'>→</span>
+          <div className='flex items-center text-gray-400'>
+            <span className='w-6 h-6 rounded-full border border-gray-400 flex items-center justify-center text-sm'>
+              3
+            </span>
+            <span className='ml-2'>Thank You</span>
+          </div>
+        </div>
+      </div>
 
       <div className='mb-6'>
         <h2 className='text-lg font-semibold'>Order Summary</h2>
@@ -96,24 +117,39 @@ export default function CheckoutPage() {
           )}
         </div>
 
-        <div>
-          <label className='block mb-1'>Shipping Address</label>
-          <textarea
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            className='w-full p-2 border rounded'
-          />
-          {errors.address && (
-            <p className='text-red-500 text-sm'>{errors.address}</p>
-          )}
-        </div>
+        <fieldset className='p-4 border rounded space-y-4'>
+          <legend className='text-lg font-semibold mb-2'>
+            Shipping Details
+          </legend>
 
-        {/* <button
-          type='submit'
-          className='bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700'
-        >
-          Place Order
-        </button> */}
+          <div>
+            <label className='block mb-1'>Shipping Address</label>
+            <textarea
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              className='w-full p-2 border rounded'
+            />
+            {errors.address && (
+              <p className='text-red-500 text-sm'>{errors.address}</p>
+            )}
+          </div>
+
+          <div>
+            <label className='block mb-1'>Country</label>
+            <select
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              className='w-full p-2 border rounded'
+            >
+              <option value='South Africa'>South Africa</option>
+              <option value='United States'>United States</option>
+              <option value='United Kingdom'>United Kingdom</option>
+              <option value='Germany'>Germany</option>
+              <option value='India'>India</option>
+            </select>
+          </div>
+        </fieldset>
+
         <button
           type='submit'
           className='bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50'

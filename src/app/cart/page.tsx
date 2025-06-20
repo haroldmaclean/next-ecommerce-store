@@ -29,11 +29,38 @@ export default function CartPage() {
   const shipping = cart.length > 0 ? 10 : 0
   const total = subtotal + shipping
 
-  // const router = useRouter()
+  // 👇✅ Progress indicator goes RIGHT BELOW the page heading <h1>
+  const progressIndicator = (
+    <div className='mb-6'>
+      <div className='flex items-center space-x-4'>
+        <div className='flex items-center text-blue-600 font-semibold'>
+          <span className='w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm'>
+            1
+          </span>
+          <span className='ml-2'>Cart</span>
+        </div>
+        <span className='text-gray-400'>→</span>
+        <div className='flex items-center text-gray-400'>
+          <span className='w-6 h-6 rounded-full border border-gray-400 flex items-center justify-center text-sm'>
+            2
+          </span>
+          <span className='ml-2'>Checkout</span>
+        </div>
+        <span className='text-gray-400'>→</span>
+        <div className='flex items-center text-gray-400'>
+          <span className='w-6 h-6 rounded-full border border-gray-400 flex items-center justify-center text-sm'>
+            3
+          </span>
+          <span className='ml-2'>Thank You</span>
+        </div>
+      </div>
+    </div>
+  )
 
   return (
     <div className='p-8 max-w-4xl mx-auto'>
       <h1 className='text-2xl font-bold mb-6'>Your Cart</h1>
+      {progressIndicator}
 
       {cart.length === 0 ? (
         <p>Your cart is empty.</p>
@@ -114,13 +141,6 @@ export default function CartPage() {
           </div>
 
           <div className='flex justify-end mt-4'>
-            {/* <button
-              onClick={() => router.push('/checkout')}
-              className='bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700'
-            >
-              Proceed to Checkout
-            </button> */}
-
             <button
               onClick={async () => {
                 const stripe = await getStripe()
@@ -128,7 +148,7 @@ export default function CartPage() {
                 const response = await fetch('/api/checkout', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ items: cart }), // cart from useCartStore
+                  body: JSON.stringify({ items: cart }),
                 })
 
                 const data = await response.json()
