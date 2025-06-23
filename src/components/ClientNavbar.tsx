@@ -3,8 +3,11 @@
 import Link from 'next/link'
 import { Toaster } from 'react-hot-toast'
 import MiniCart from './MiniCart'
+import { useAuthStore } from '@/store/useAuthStore'
 
 export default function ClientNavbar() {
+  const { isLoggedIn, logout } = useAuthStore()
+
   return (
     <>
       <Toaster position='top-right' reverseOrder={false} />
@@ -20,6 +23,23 @@ export default function ClientNavbar() {
           <Link href='/cart' className='hover:underline font-medium'>
             Cart
           </Link>
+          {isLoggedIn ? (
+            <>
+              <Link href='/admin' className='hover:underline font-medium'>
+                Admin
+              </Link>
+              <button
+                onClick={logout}
+                className='hover:underline font-medium text-red-600'
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link href='/login' className='hover:underline font-medium'>
+              Login
+            </Link>
+          )}
         </div>
         <MiniCart />
       </nav>
