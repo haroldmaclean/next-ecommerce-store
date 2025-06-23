@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { useAuthStore } from '@/store/useAuthStore'
+import LogoutButton from '@/components/LogoutButton'
 
 export default function AdminDashboard() {
   const { isLoggedIn } = useAuthStore()
@@ -19,6 +20,7 @@ export default function AdminDashboard() {
   return (
     <div className='p-8'>
       <h1 className='text-3xl font-bold mb-4'>Admin Dashboard</h1>
+      <LogoutButton />
       <p className='text-lg text-gray-600'>Welcome, Admin! 🎉</p>
 
       <div className='mt-6 space-y-4'>
