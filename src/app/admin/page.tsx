@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/store/useAuthStore'
 import LogoutButton from '@/components/LogoutButton'
 
-// Product type definition
 type Product = {
   _id: string
   name: string
@@ -15,28 +14,35 @@ type Product = {
 export default function AdminDashboard() {
   const { isLoggedIn } = useAuthStore()
   const router = useRouter()
+
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
-  // Redirect if not logged in
   useEffect(() => {
-    if (!isLoggedIn) {
-      router.push('/login')
-    }
+    if (!isLoggedIn) router.push('/login')
   }, [isLoggedIn, router])
 
-  // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/products`
         )
-        if (!res.ok) throw new Error('Failed to fetch')
-        const data: Product[] = await res.json()
-        setProducts(data)
+        if (!res.ok) throw new Error('Failed to fetch products')
+        const json = await res.json()
+
+        // ✅ Defensive check
+        if (Array.isArray(json)) {
+          setProducts(json)
+        } else if (Array.isArray(json.products)) {
+          setProducts(json.products)
+        } else {
+          throw new Error('Invalid data format from API')
+        }
       } catch (err) {
-        console.error('❌ Error fetching products:', err)
+        console.error('❌ Error:', err)
+        setError('Failed to load products.')
       } finally {
         setLoading(false)
       }
@@ -56,7 +62,9 @@ export default function AdminDashboard() {
         {/* Products */}
         <section className='p-4 border rounded shadow'>
           <h2 className='font-semibold text-xl mb-2'>📦 Manage Products</h2>
-          {products.length === 0 ? (
+          {error ? (
+            <p className='text-red-500'>{error}</p>
+          ) : products.length === 0 ? (
             <p className='text-gray-500'>No products found.</p>
           ) : (
             <ul className='space-y-2'>
