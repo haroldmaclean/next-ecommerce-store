@@ -19,23 +19,24 @@ export default function AdminDashboard() {
   const { isLoggedIn } = useAuthStore()
   const router = useRouter()
 
-  // State for products and loading/error handling
+  // State
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  // Form input state
+  // Form state
   const [newName, setNewName] = useState('')
   const [newPrice, setNewPrice] = useState<number>(0)
   const [newDescription, setNewDescription] = useState('')
   const [newImage, setNewImage] = useState('')
 
-  // Redirect if not logged in
+  // Editing state
+  const [editingId, setEditingId] = useState<string | null>(null)
+
   useEffect(() => {
     if (!isLoggedIn) router.push('/login')
   }, [isLoggedIn, router])
 
-  // Fetch all products from backend
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -44,15 +45,7 @@ export default function AdminDashboard() {
         )
         if (!res.ok) throw new Error('Failed to fetch products')
         const json = await res.json()
-
-        // Handle different response shapes defensively
-        if (Array.isArray(json)) {
-          setProducts(json)
-        } else if (Array.isArray(json.products)) {
-          setProducts(json.products)
-        } else {
-          throw new Error('Invalid data format from API')
-        }
+        setProducts(Array.isArray(json) ? json : json.products || [])
       } catch (err) {
         console.error('❌ Error:', err)
         setError('Failed to load products.')
@@ -64,41 +57,81 @@ export default function AdminDashboard() {
     if (isLoggedIn) fetchProducts()
   }, [isLoggedIn])
 
-  // Handle new product creation
-  const handleCreateProduct = async (e: React.FormEvent) => {
+  // Handle product creation or update
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const payload = {
+      name: newName,
+      price: newPrice,
+      description: newDescription,
+      image: newImage,
+    }
+
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/products`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify({
-            name: newName,
-            price: newPrice,
-            description: newDescription,
-            image: newImage,
-          }),
-        }
+      const endpoint = editingId
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/products/${editingId}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/products`
+
+      const method = editingId ? 'PUT' : 'POST'
+
+      const res = await fetch(endpoint, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!res.ok) throw new Error('Failed to submit product')
+
+      const result = await res.json()
+
+      setProducts((prev) =>
+        editingId
+          ? prev.map((p) => (p._id === editingId ? result : p))
+          : [...prev, result]
       )
 
-      if (!res.ok) throw new Error('Failed to create product')
-
-      const created = await res.json()
-      setProducts((prev) => [...prev, created])
-
-      // Reset input fields after success
       setNewName('')
       setNewPrice(0)
       setNewDescription('')
       setNewImage('')
+      setEditingId(null)
     } catch (err) {
-      console.error('❌ Error creating product:', err)
-      alert('Failed to create product.')
+      console.error('❌ Error submitting product:', err)
+      alert('Failed to submit product.')
     }
+  }
+
+  // Handle delete
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this product?')) return
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/products/${id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      )
+      if (!res.ok) throw new Error('Failed to delete')
+      setProducts((prev) => prev.filter((p) => p._id !== id))
+    } catch (err) {
+      console.error('❌ Delete error:', err)
+      alert('Delete failed.')
+    }
+  }
+
+  // Handle edit button click
+  const handleEdit = (product: Product) => {
+    setNewName(product.name)
+    setNewPrice(product.price)
+    setNewDescription(product.description)
+    setNewImage(product.image)
+    setEditingId(product._id)
   }
 
   if (!isLoggedIn || loading) return null
@@ -109,12 +142,12 @@ export default function AdminDashboard() {
       <LogoutButton />
 
       <div className='mt-6 space-y-4'>
-        {/* Manage Products Section */}
+        {/* Products Section */}
         <section className='p-4 border rounded shadow'>
           <h2 className='font-semibold text-xl mb-2'>📦 Manage Products</h2>
 
-          {/* Product creation form */}
-          <form onSubmit={handleCreateProduct} className='space-y-2 mb-4'>
+          {/* Form */}
+          <form onSubmit={handleSubmit} className='space-y-2 mb-4'>
             <input
               type='text'
               placeholder='Product Name'
@@ -123,14 +156,18 @@ export default function AdminDashboard() {
               className='w-full border px-3 py-2 rounded'
               required
             />
-            <input
-              type='number'
-              placeholder='Price'
-              value={newPrice}
-              onChange={(e) => setNewPrice(Number(e.target.value))}
-              className='w-full border px-3 py-2 rounded'
-              required
-            />
+            <label className='block'>
+              <span className='text-sm font-medium text-gray-700'>Price</span>
+              <input
+                type='number'
+                placeholder='e.g. 99.99'
+                step='0.01'
+                value={newPrice}
+                onChange={(e) => setNewPrice(Number(e.target.value))}
+                className='w-full border px-3 py-2 rounded mt-1'
+                required
+              />
+            </label>
             <input
               type='text'
               placeholder='Description'
@@ -151,11 +188,11 @@ export default function AdminDashboard() {
               type='submit'
               className='bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700'
             >
-              Add Product
+              {editingId ? 'Update Product' : 'Add Product'}
             </button>
           </form>
 
-          {/* Product list */}
+          {/* Product List */}
           {error ? (
             <p className='text-red-500'>{error}</p>
           ) : products.length === 0 ? (
@@ -163,30 +200,49 @@ export default function AdminDashboard() {
           ) : (
             <ul className='space-y-2'>
               {products.map((p) => (
-                <li key={p._id} className='border p-2 rounded'>
-                  <strong>{p.name}</strong> – ${p.price}
-                  <p className='text-sm text-gray-600'>{p.description}</p>
+                <li
+                  key={p._id}
+                  className='border p-3 rounded flex gap-4 items-start'
+                >
                   <Image
                     src={p.image}
                     alt={p.name}
                     width={96}
                     height={96}
-                    className='mt-2 rounded object-cover'
+                    className='rounded object-cover'
                     unoptimized
                   />
+                  <div className='flex-1'>
+                    <strong>{p.name}</strong> – ${p.price.toFixed(2)}
+                    <p className='text-sm text-gray-600'>{p.description}</p>
+                  </div>
+                  <div className='flex flex-col gap-2'>
+                    <button
+                      onClick={() => handleEdit(p)}
+                      className='text-sm bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600'
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(p._id)}
+                      className='text-sm bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600'
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
           )}
         </section>
 
-        {/* View Orders Section */}
+        {/* Orders Section */}
         <section className='p-4 border rounded shadow'>
           <h2 className='font-semibold text-xl mb-2'>🛒 View Orders</h2>
           <p>See recent customer orders</p>
         </section>
 
-        {/* Manage Users Section */}
+        {/* Users Section */}
         <section className='p-4 border rounded shadow'>
           <h2 className='font-semibold text-xl mb-2'>👤 Manage Users</h2>
           <p>Promote users to admin, remove users, etc.</p>
