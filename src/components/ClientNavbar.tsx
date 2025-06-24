@@ -41,6 +41,7 @@ export default function ClientNavbar() {
             </Link>
           )}
         </div>
+
         <MiniCart />
       </nav>
     </>
