@@ -5,6 +5,7 @@ interface AuthState {
   isLoggedIn: boolean
   login: () => void
   logout: () => void
+  register: () => void // ✅ Add this
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -13,9 +14,10 @@ export const useAuthStore = create<AuthState>()(
       isLoggedIn: false,
       login: () => set({ isLoggedIn: true }),
       logout: () => set({ isLoggedIn: false }),
+      register: () => set({ isLoggedIn: true }), // ✅ Just like login
     }),
     {
-      name: 'auth-storage', // key in localStorage
+      name: 'auth-storage',
     }
   )
 )

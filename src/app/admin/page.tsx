@@ -2,11 +2,10 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { useAuthStore } from '@/store/useAuthStore'
+
 import LogoutButton from '@/components/LogoutButton'
 import Image from 'next/image'
 
-// Product type definition
 type Product = {
   _id: string
   name: string
@@ -16,27 +15,49 @@ type Product = {
 }
 
 export default function AdminDashboard() {
-  const { isLoggedIn } = useAuthStore()
   const router = useRouter()
-
-  // State
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [isAdmin, setIsAdmin] = useState(false)
 
-  // Form state
   const [newName, setNewName] = useState('')
-  const [newPrice, setNewPrice] = useState<number>(0)
+  const [newPrice, setNewPrice] = useState(0)
   const [newDescription, setNewDescription] = useState('')
   const [newImage, setNewImage] = useState('')
-
-  // Editing state
   const [editingId, setEditingId] = useState<string | null>(null)
 
+  // Check token and verify if user is admin
   useEffect(() => {
-    if (!isLoggedIn) router.push('/login')
-  }, [isLoggedIn, router])
+    const checkAdmin = async () => {
+      const token = localStorage.getItem('token')
+      if (!token) return router.push('/login')
 
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/profile`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        )
+
+        const data = await res.json()
+
+        if (!res.ok || !data.isAdmin) {
+          return router.push('/login') // not admin or token invalid
+        }
+
+        setIsAdmin(true)
+      } catch (err) {
+        console.error('❌ Auth error:', err)
+        router.push('/login')
+      }
+    }
+
+    checkAdmin()
+  }, [router])
+
+  // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -54,10 +75,9 @@ export default function AdminDashboard() {
       }
     }
 
-    if (isLoggedIn) fetchProducts()
-  }, [isLoggedIn])
+    if (isAdmin) fetchProducts()
+  }, [isAdmin])
 
-  // Handle product creation or update
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const payload = {
@@ -84,7 +104,6 @@ export default function AdminDashboard() {
       })
 
       if (!res.ok) throw new Error('Failed to submit product')
-
       const result = await res.json()
 
       setProducts((prev) =>
@@ -104,7 +123,6 @@ export default function AdminDashboard() {
     }
   }
 
-  // Handle delete
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return
     try {
@@ -125,7 +143,6 @@ export default function AdminDashboard() {
     }
   }
 
-  // Handle edit button click
   const handleEdit = (product: Product) => {
     setNewName(product.name)
     setNewPrice(product.price)
@@ -134,7 +151,7 @@ export default function AdminDashboard() {
     setEditingId(product._id)
   }
 
-  if (!isLoggedIn || loading) return null
+  if (!isAdmin || loading) return null
 
   return (
     <div className='p-8'>
@@ -142,11 +159,8 @@ export default function AdminDashboard() {
       <LogoutButton />
 
       <div className='mt-6 space-y-4'>
-        {/* Products Section */}
         <section className='p-4 border rounded shadow'>
           <h2 className='font-semibold text-xl mb-2'>📦 Manage Products</h2>
-
-          {/* Form */}
           <form onSubmit={handleSubmit} className='space-y-2 mb-4'>
             <input
               type='text'
@@ -156,18 +170,15 @@ export default function AdminDashboard() {
               className='w-full border px-3 py-2 rounded'
               required
             />
-            <label className='block'>
-              <span className='text-sm font-medium text-gray-700'>Price</span>
-              <input
-                type='number'
-                placeholder='e.g. 99.99'
-                step='0.01'
-                value={newPrice}
-                onChange={(e) => setNewPrice(Number(e.target.value))}
-                className='w-full border px-3 py-2 rounded mt-1'
-                required
-              />
-            </label>
+            <input
+              type='number'
+              placeholder='e.g. 99.99'
+              step='0.01'
+              value={newPrice}
+              onChange={(e) => setNewPrice(Number(e.target.value))}
+              className='w-full border px-3 py-2 rounded'
+              required
+            />
             <input
               type='text'
               placeholder='Description'
@@ -192,7 +203,6 @@ export default function AdminDashboard() {
             </button>
           </form>
 
-          {/* Product List */}
           {error ? (
             <p className='text-red-500'>{error}</p>
           ) : products.length === 0 ? (
@@ -236,13 +246,11 @@ export default function AdminDashboard() {
           )}
         </section>
 
-        {/* Orders Section */}
         <section className='p-4 border rounded shadow'>
           <h2 className='font-semibold text-xl mb-2'>🛒 View Orders</h2>
           <p>See recent customer orders</p>
         </section>
 
-        {/* Users Section */}
         <section className='p-4 border rounded shadow'>
           <h2 className='font-semibold text-xl mb-2'>👤 Manage Users</h2>
           <p>Promote users to admin, remove users, etc.</p>

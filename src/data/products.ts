@@ -31,7 +31,7 @@ export const products: Product[] = [
     description: 'Next-generation smartphone with advanced features.',
     price: 999.99,
     image:
-      'https://images.unsplash.com/photo-1697284958332-93444aeb4efb?w=400&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8QXBwbGUlMjBpUGhvbmUlMjAxNXxlbnwwfHwwfHx8MA%3D%3D',
+      'https://images.unsplash.com/photo-1697284959152-32ef13855932?w=400&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8aXBob25lJTIwMTV8ZW58MHx8MHx8fDA%3D',
   },
   {
     id: '5',

@@ -4,10 +4,11 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/useAuthStore'
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter()
-  const login = useAuthStore((state) => state.login)
+  const register = useAuthStore((state) => state.register)
 
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -16,37 +17,27 @@ export default function LoginPage() {
     e.preventDefault()
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/register`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password }),
+        }
+      )
 
       const data = await res.json()
 
       if (!res.ok) {
-        throw new Error(data.message || 'Login failed')
+        throw new Error(data.message || 'Register failed')
       }
 
       // Save token and mark as logged in
       localStorage.setItem('token', data.token)
-      login()
+      register()
 
-      // ✅ Fetch profile to check isAdmin
-      const profileRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/profile`,
-        {
-          headers: { Authorization: `Bearer ${data.token}` },
-        }
-      )
-
-      const profile = await profileRes.json()
-
-      if (profileRes.ok && profile.isAdmin) {
-        router.push('/admin')
-      } else {
-        setError('Access denied: Not an admin')
-      }
+      // Redirect to admin
+      router.push('/admin')
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message)
@@ -58,9 +49,17 @@ export default function LoginPage() {
 
   return (
     <div className='p-8 max-w-md mx-auto'>
-      <h1 className='text-2xl font-bold mb-4'>Login</h1>
+      <h1 className='text-2xl font-bold mb-4'>Register</h1>
 
       <form onSubmit={handleSubmit} className='space-y-4'>
+        <input
+          type='text'
+          placeholder='Name'
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className='w-full border px-3 py-2 rounded'
+          required
+        />
         <input
           type='email'
           placeholder='Email'
@@ -82,7 +81,7 @@ export default function LoginPage() {
           type='submit'
           className='bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700'
         >
-          Login
+          Register
         </button>
       </form>
     </div>
