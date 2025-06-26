@@ -6,12 +6,14 @@ import Image from 'next/image'
 import { formatPrice } from '@/lib/utils'
 import { getStripe } from '@/lib/stripe'
 
+// ✅ Correct interface (no logic, just types)
 interface CartItem {
   id: string
   name: string
+  description: string
   price: number
   quantity: number
-  image?: string
+  image: string
 }
 
 export default function CartPage() {
@@ -41,9 +43,7 @@ export default function CartPage() {
         }
       )
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok')
-      }
+      if (!response.ok) throw new Error('Network response was not ok')
 
       const data = await response.json()
 
@@ -108,6 +108,7 @@ export default function CartPage() {
                 />
                 <div>
                   <h2 className='text-lg font-semibold'>{item.name}</h2>
+                  <p className='text-sm text-gray-500'>{item.description}</p>
                   <div className='flex items-center gap-2 mt-1'>
                     <button
                       onClick={() => decreaseQuantity(item.id)}
