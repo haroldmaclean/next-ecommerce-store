@@ -8,7 +8,9 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
+    unoptimized: true, // ✅ disables built-in optimization
   },
 }
 
 module.exports = nextConfig
+//export default nextConfig

@@ -12,6 +12,3 @@ export const fetchProducts = async (): Promise<{ products: Product[] }> => {
   if (!res.ok) throw new Error('Failed to fetch products')
   return await res.json()
 }
-
-
-
