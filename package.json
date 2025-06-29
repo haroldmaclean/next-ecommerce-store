@@ -7,7 +7,7 @@
     "build": "next build && npm run git:auto",
     "start": "next start",
     "lint": "next lint",
-    "git:auto": "./git-commit.sh"
+    "git:auto": "bash git-commit.sh"
   },
   "dependencies": {
     "@stripe/stripe-js": "^7.3.1",
