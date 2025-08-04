@@ -15,8 +15,12 @@ export const fetchProducts = async (): Promise<{ products: Product[] }> => {
   }
 
   try {
-    const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-    const res = await fetch(`${baseURL}/api/products`)
+    const envURL = process.env.NEXT_PUBLIC_API_URL?.trim()
+    const baseURL = envURL || 'http://localhost:5000/api'
+
+    console.log('🌐 fetchProducts from:', baseURL) // Optional: remove in production
+
+    const res = await fetch(`${baseURL}/products`)
 
     if (!res.ok) throw new Error('Failed to fetch products')
 
