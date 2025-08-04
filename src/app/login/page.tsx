@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useAuthStore } from '@/store/useAuthStore'
 
 export default function LoginPage() {
@@ -16,11 +17,14 @@ export default function LoginPage() {
     e.preventDefault()
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/users/login`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        }
+      )
 
       const data = await res.json()
 
@@ -28,11 +32,9 @@ export default function LoginPage() {
         throw new Error(data.message || 'Login failed')
       }
 
-      // Save token and mark as logged in
       localStorage.setItem('token', data.token)
       login()
 
-      // ✅ Fetch profile to check isAdmin
       const profileRes = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/profile`,
         {
@@ -54,7 +56,7 @@ export default function LoginPage() {
         setError('Something went wrong')
       }
     }
-  }
+  } // ✅ Make sure this closes properly
 
   return (
     <div className='p-8 max-w-md mx-auto'>
@@ -85,6 +87,13 @@ export default function LoginPage() {
           Login
         </button>
       </form>
+
+      <p className='mt-4 text-sm text-gray-700'>
+        Don&apos;t have an account?{' '}
+        <Link href='/register' className='text-blue-600 underline'>
+          Register here
+        </Link>
+      </p>
     </div>
   )
-}
+} // ✅ Final closing brace for component

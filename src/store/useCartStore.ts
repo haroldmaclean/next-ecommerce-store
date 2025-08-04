@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
+import type { StateStorage } from 'zustand/middleware'
 
 export interface CartItem {
   id: string
@@ -20,65 +21,66 @@ interface CartState {
   getTotalPrice: () => number
 }
 
+// ✅ SSR-safe storage fallback with proper types & no-unused-vars
+const storage: StateStorage =
+  typeof window !== 'undefined'
+    ? localStorage
+    : {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        getItem: (_key: string): string | null => null,
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        setItem: (_key: string, _value: string): void => {},
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        removeItem: (_key: string): void => {},
+      }
+
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       cart: [],
-
-      addToCart: (item) =>
-        set((state) => {
+      addToCart: (item: CartItem) =>
+        set((state: CartState) => {
           const existing = state.cart.find((i) => i.id === item.id)
           if (existing) {
-            const updatedCart = state.cart.map((i) =>
-              i.id === item.id
-                ? { ...i, quantity: i.quantity + item.quantity }
-                : i
-            )
-            console.log('Updated existing item in cart:', updatedCart)
-            return { cart: updatedCart }
+            return {
+              cart: state.cart.map((i) =>
+                i.id === item.id
+                  ? { ...i, quantity: i.quantity + item.quantity }
+                  : i
+              ),
+            }
           }
-          const newCart = [...state.cart, item]
-          console.log('Added new item to cart:', newCart)
-          return { cart: newCart }
+          return { cart: [...state.cart, item] }
         }),
-
-      removeFromCart: (id) =>
-        set((state) => {
-          const filteredCart = state.cart.filter((item) => item.id !== id)
-          console.log(`Removed item with id=${id} from cart:`, filteredCart)
-          return { cart: filteredCart }
-        }),
-
-      clearCart: () => {
-        console.log('Cleared cart')
-        return set({ cart: [] })
-      },
-
-      increaseQuantity: (id) =>
-        set((state) => ({
+      removeFromCart: (id: string) =>
+        set((state: CartState) => ({
+          cart: state.cart.filter((item) => item.id !== id),
+        })),
+      clearCart: () => set({ cart: [] }),
+      increaseQuantity: (id: string) =>
+        set((state: CartState) => ({
           cart: state.cart.map((item) =>
             item.id === id ? { ...item, quantity: item.quantity + 1 } : item
           ),
         })),
-
-      decreaseQuantity: (id) =>
-        set((state) => ({
+      decreaseQuantity: (id: string) =>
+        set((state: CartState) => ({
           cart: state.cart
             .map((item) =>
               item.id === id ? { ...item, quantity: item.quantity - 1 } : item
             )
             .filter((item) => item.quantity > 0),
         })),
-
-      // ✅ Add these two:
       getTotalItems: () =>
         get().cart.reduce((sum, item) => sum + item.quantity, 0),
-
       getTotalPrice: () =>
         get().cart.reduce((sum, item) => sum + item.quantity * item.price, 0),
     }),
     {
       name: 'cart-storage',
+      storage: createJSONStorage(() => storage),
     }
   )
 )

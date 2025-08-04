@@ -5,8 +5,8 @@ import { useCartStore } from '@/store/useCartStore'
 import Image from 'next/image'
 import { formatPrice } from '@/lib/utils'
 import { getStripe } from '@/lib/stripe'
+import { useEffect, useState } from 'react'
 
-// ✅ Correct interface (no logic, just types)
 interface CartItem {
   id: string
   name: string
@@ -22,6 +22,11 @@ export default function CartPage() {
   const clearCart = useCartStore((state) => state.clearCart)
   const increaseQuantity = useCartStore((state) => state.increaseQuantity)
   const decreaseQuantity = useCartStore((state) => state.decreaseQuantity)
+
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const subtotal = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -59,11 +64,12 @@ export default function CartPage() {
     }
   }
 
+  if (!mounted) return null
+
   return (
     <div className='p-8 max-w-4xl mx-auto'>
       <h1 className='text-2xl font-bold mb-6'>Your Cart</h1>
 
-      {/* ✅ Progress Indicator */}
       <div className='mb-6'>
         <div className='flex items-center space-x-4'>
           <div className='flex items-center text-blue-600 font-semibold'>
