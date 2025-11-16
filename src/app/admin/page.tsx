@@ -83,7 +83,9 @@ export default function AdminDashboard() {
 
     const fetchProducts = async () => {
       try {
-        const res = await fetch(`${baseUrl}/api/products`)
+        const res = await fetch(`${baseUrl}/api/products`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
         if (!res.ok) throw new Error('Failed to fetch products')
         const json = await res.json()
         const productsArray = Array.isArray(json) ? json : json.products || []
