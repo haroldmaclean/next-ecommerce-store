@@ -17,6 +17,7 @@ export default function LoginPage() {
     e.preventDefault()
 
     try {
+      // 1. Successful Login Call: This is working (to /api/users/login)
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/users/login`,
         {
@@ -33,10 +34,11 @@ export default function LoginPage() {
       }
 
       localStorage.setItem('token', data.token)
-      login()
+      login() // 2. Profile Fetch Request: FIXING THE URL
 
       const profileRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/profile`,
+        // 🛑 THE CRITICAL CHANGE: Must be /api/users/profile
+        `${process.env.NEXT_PUBLIC_API_URL}/api/users/profile`,
         {
           headers: { Authorization: `Bearer ${data.token}` },
         }
@@ -47,22 +49,23 @@ export default function LoginPage() {
       if (profileRes.ok && profile.isAdmin) {
         router.push('/admin')
       } else {
+        // If login succeeds but user is not admin, show error and don't redirect
         setError('Access denied: Not an admin')
       }
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message)
+        setError(`❌ Auth error: ${err.message}`)
       } else {
         setError('Something went wrong')
       }
     }
-  } // ✅ Make sure this closes properly
+  } // Final closing brace for handleSubmit
 
   return (
     <div className='p-8 max-w-md mx-auto'>
-      <h1 className='text-2xl font-bold mb-4'>Login</h1>
-
+            <h1 className='text-2xl font-bold mb-4'>Login</h1>     {' '}
       <form onSubmit={handleSubmit} className='space-y-4'>
+               {' '}
         <input
           type='email'
           placeholder='Email'
@@ -71,6 +74,7 @@ export default function LoginPage() {
           className='w-full border px-3 py-2 rounded'
           required
         />
+               {' '}
         <input
           type='password'
           placeholder='Password'
@@ -79,21 +83,124 @@ export default function LoginPage() {
           className='w-full border px-3 py-2 rounded'
           required
         />
-        {error && <p className='text-red-500'>{error}</p>}
+                {error && <p className='text-red-500'>{error}</p>}       {' '}
         <button
           type='submit'
           className='bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700'
         >
-          Login
+                    Login        {' '}
         </button>
+             {' '}
       </form>
-
+           {' '}
       <p className='mt-4 text-sm text-gray-700'>
-        Don&apos;t have an account?{' '}
+                Don&apos;t have an account?        {' '}
         <Link href='/register' className='text-blue-600 underline'>
-          Register here
+                    Register here        {' '}
         </Link>
+             {' '}
       </p>
+         {' '}
     </div>
   )
-} // ✅ Final closing brace for component
+}
+
+// 'use client'
+
+// import { useState } from 'react'
+// import { useRouter } from 'next/navigation'
+// import Link from 'next/link'
+// import { useAuthStore } from '@/store/useAuthStore'
+
+// export default function LoginPage() {
+//   const router = useRouter()
+//   const login = useAuthStore((state) => state.login)
+
+//   const [email, setEmail] = useState('')
+//   const [password, setPassword] = useState('')
+//   const [error, setError] = useState('')
+
+//   const handleSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault()
+
+//     try {
+//       const res = await fetch(
+//         `${process.env.NEXT_PUBLIC_API_URL}/api/users/login`,
+//         {
+//           method: 'POST',
+//           headers: { 'Content-Type': 'application/json' },
+//           body: JSON.stringify({ email, password }),
+//         }
+//       )
+
+//       const data = await res.json()
+
+//       if (!res.ok) {
+//         throw new Error(data.message || 'Login failed')
+//       }
+
+//       localStorage.setItem('token', data.token)
+//       login()
+
+//       const profileRes = await fetch(
+//         `${process.env.NEXT_PUBLIC_API_URL}/api/profile`,
+//         {
+//           headers: { Authorization: `Bearer ${data.token}` },
+//         }
+//       )
+
+//       const profile = await profileRes.json()
+
+//       if (profileRes.ok && profile.isAdmin) {
+//         router.push('/admin')
+//       } else {
+//         setError('Access denied: Not an admin')
+//       }
+//     } catch (err: unknown) {
+//       if (err instanceof Error) {
+//         setError(err.message)
+//       } else {
+//         setError('Something went wrong')
+//       }
+//     }
+//   } // ✅ Make sure this closes properly
+
+//   return (
+//     <div className='p-8 max-w-md mx-auto'>
+//       <h1 className='text-2xl font-bold mb-4'>Login</h1>
+
+//       <form onSubmit={handleSubmit} className='space-y-4'>
+//         <input
+//           type='email'
+//           placeholder='Email'
+//           value={email}
+//           onChange={(e) => setEmail(e.target.value)}
+//           className='w-full border px-3 py-2 rounded'
+//           required
+//         />
+//         <input
+//           type='password'
+//           placeholder='Password'
+//           value={password}
+//           onChange={(e) => setPassword(e.target.value)}
+//           className='w-full border px-3 py-2 rounded'
+//           required
+//         />
+//         {error && <p className='text-red-500'>{error}</p>}
+//         <button
+//           type='submit'
+//           className='bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700'
+//         >
+//           Login
+//         </button>
+//       </form>
+
+//       <p className='mt-4 text-sm text-gray-700'>
+//         Don&apos;t have an account?{' '}
+//         <Link href='/register' className='text-blue-600 underline'>
+//           Register here
+//         </Link>
+//       </p>
+//     </div>
+//   )
+// } // ✅ Final closing brace for component
